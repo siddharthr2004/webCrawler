@@ -1,2 +1,1 @@
-"first we will check this string"
-"then we will check this string"
+"http://www.example.com/hello/there/you"

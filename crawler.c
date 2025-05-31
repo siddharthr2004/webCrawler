@@ -1,12 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <netdb.h>
 
 char **URLs;
-int vals;
+int vals =0;
 
-void getPages(void) {
 
+void sendLinks(void) {
+    char *toDNS = malloc(256 * sizeof(char));
+    for (int i=0; i<vals; ++i) {
+        int size = (int) (strnlen(URLs[i], 256));
+        for (int j=8; j<size; ++j) {
+            URLs[i][j-7] = URLs[i][j];
+        }
+        
+        char *temp = strchr(URLs[i], '/');
+        int sizeReal = temp - URLs[i];
+        strcpy(toDNS, URLs[i]);
+        toDNS[sizeReal] = '\0';
+
+        struct addrinfo hint;
+        struct addrinfo *result;
+        
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -27,7 +47,7 @@ int main(int argc, char *argv[]) {
             strcpy(URLs[vals], tempCpy);
             vals++;
         }
-        getPages();
+        sendLinks();
     }
     if (strcmp(argv[1], "-c") == 0) {
         for (int i=0; i<argc-2; ++i) {
@@ -40,7 +60,7 @@ int main(int argc, char *argv[]) {
             strcpy(URLs[vals], argv[i+2]);
             vals++;
         }
-        getPages();
+        sendLinks();
     }
     return 0;
 }
