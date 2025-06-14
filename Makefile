@@ -4,7 +4,7 @@ CC := gcc
 CXXFLAGS := -std=c++20 -Wall -O2
 CFLAGS := -std=c17 -Wall -O2
 
-CXX_TARGET := parentCrawler
+CXX_TARGET := parentCrawler 
 C_TARGET := childCrawler
 
 CXX_SRC := crawler.cpp

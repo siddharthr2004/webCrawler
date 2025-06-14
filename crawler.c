@@ -73,7 +73,7 @@ void sendLinks(void) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
                 exit(EXIT_FAILURE);
             } 
-            extractHTML(result, rp, sfd);
+            //extractHTML(result, rp, sfd);
         } else {
             for (int j=7; j<size; ++j) {
                 URLs[i][j-7] = URLs[i][j];
@@ -84,12 +84,15 @@ void sendLinks(void) {
             strcpy(toDNS, URLs[i]);
             toDNS[sizeReal] = '\0';
             s = getaddrinfo(toDNS, "http", &hint, &result);
+            //TEST
+            printf("%s", toDNS);
+            //TEST
             
             if (s!= 0) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
                 exit(EXIT_FAILURE);
             } 
-            extractHTML(result, rp, sfd);
+            //extractHTML(result, rp, sfd);
         }
     }
 }
@@ -100,8 +103,6 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     if (strcmp(argv[1], "-f") == 0) {
-        //TEST ONE
-        printf("child came here 1");
         FILE *fp = fopen(argv[2], "r");
         char *tempCpy = malloc(256 * sizeof(char));
         while(fgets(tempCpy, 256, fp) != NULL) {
@@ -117,9 +118,7 @@ int main(int argc, char *argv[]) {
         sendLinks();
     }
     if (strcmp(argv[1], "-c") == 0) {
-        //TEST TWO
-        printf("child came here twos");
-        /*
+        printf("came here child");
         for (int i=0; i<argc-2; ++i) {
             if (i==0) {
                 URLs = malloc(sizeof(char *));
@@ -128,10 +127,10 @@ int main(int argc, char *argv[]) {
             }
             URLs[vals] = malloc(256 * sizeof(char));
             strcpy(URLs[vals], argv[i+2]);
+            printf("%s", URLs[i]);
             vals++;
         }
         sendLinks();
-        */
     }
     return 0;
 }
