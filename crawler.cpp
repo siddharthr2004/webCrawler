@@ -26,8 +26,11 @@ class getVals {
             char* args[valAmount];
                 args[0] = "./crawler";
                 for (int i=1; i<valAmount; ++i) {
+                    std::cout<<originalURLs[i].c_str()<<std::endl;
                     args[i] = const_cast<char*>(originalURLs[i].c_str());
-                }
+                } 
+                //THIS IS FOR TESTING ONLY
+                //THIS IS FOR TESTING ONLY
             pid_t pid = fork();
             if (pid == -1) {
                 std::cout<<"Error forking process"<<std::endl;
@@ -38,6 +41,7 @@ class getVals {
                 if (dup2(fd[1], STDOUT_FILENO) == -1) {
                     std::cerr<<"Error copying child information to read pipe"<<std::endl;
                 }
+
                 close(fd[1]);
                 execvp(args[0], args);
                 std::cerr<<"failed to load process image"<<std::endl;
@@ -58,15 +62,15 @@ class getVals {
         }
 };
 int main(int argc, char* argv[]) {
-    getVals* intoC = new getVals(argc-2);
+    getVals* intoC = new getVals(argc-1);
     std::vector<std::string> originalURLs;
     if (argc < 3) {
         std::cout<<"Not enough commands were inputted, aborting..."<< std::endl;
         return 1;
     }
     if (std::string (argv[1]) == "-c") {
-        for (int i=2; i<argc-2; ++i) {
-            originalURLs.push_back(std::string (argv[i]));
+        for (int i=0; i<argc-2; ++i) {
+            originalURLs.push_back(std::string (argv[i+2]));
         }
         intoC->addURLs(originalURLs);
     }
@@ -81,6 +85,7 @@ int main(int argc, char* argv[]) {
             originalURLs.push_back(line);
         }
         intoC->addURLs(originalURLs);
+        intoC->forkCFile();
     }
     return 0;
 }

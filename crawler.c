@@ -100,6 +100,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     if (strcmp(argv[1], "-f") == 0) {
+        //TEST ONE
+        printf("child came here 1");
         FILE *fp = fopen(argv[2], "r");
         char *tempCpy = malloc(256 * sizeof(char));
         while(fgets(tempCpy, 256, fp) != NULL) {
@@ -115,6 +117,9 @@ int main(int argc, char *argv[]) {
         sendLinks();
     }
     if (strcmp(argv[1], "-c") == 0) {
+        //TEST TWO
+        printf("child came here two");
+        /*
         for (int i=0; i<argc-2; ++i) {
             if (i==0) {
                 URLs = malloc(sizeof(char *));
@@ -126,6 +131,7 @@ int main(int argc, char *argv[]) {
             vals++;
         }
         sendLinks();
+        */
     }
     return 0;
 }
