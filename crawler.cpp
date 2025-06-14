@@ -10,6 +10,7 @@ using namespace std;
 class getVals {
     public:
         int valAmount;
+        std::string flag;
         std::vector<std::string> originalURLs;
         getVals(int vals) {
             valAmount = vals;
@@ -23,14 +24,13 @@ class getVals {
                 std::cerr<<"Pipe failed to work"<<std::endl;
                 exit(1);
             }
-            char* args[valAmount];
-                args[0] = "./crawler";
-                for (int i=1; i<valAmount; ++i) {
-                    std::cout<<originalURLs[i].c_str()<<std::endl;
-                    args[i] = const_cast<char*>(originalURLs[i].c_str());
+            char* args[valAmount+3];
+                args[0] = "./childCrawler";
+                args[1] = const_cast<char*>(flag.c_str());
+                for (int i=0; i<valAmount; ++i) {
+                    args[i+2] = const_cast<char*>(originalURLs[i].c_str());
                 } 
-                //THIS IS FOR TESTING ONLY
-                //THIS IS FOR TESTING ONLY
+                args[valAmount+2] = nullptr;
             pid_t pid = fork();
             if (pid == -1) {
                 std::cout<<"Error forking process"<<std::endl;
@@ -41,12 +41,12 @@ class getVals {
                 if (dup2(fd[1], STDOUT_FILENO) == -1) {
                     std::cerr<<"Error copying child information to read pipe"<<std::endl;
                 }
-
                 close(fd[1]);
                 execvp(args[0], args);
-                std::cerr<<"failed to load process image"<<std::endl;
-                exit(1);
+                std::cout<<"failed to load process image"<<std::endl;
+                exit(EXIT_FAILURE);
             } else {
+                std::cout<<"hello from parent"<<std::endl;
                 close(fd[1]);
                 char *buffer = new char[30000];
                 ssize_t n = read(fd[0], buffer, 30000);
@@ -57,6 +57,7 @@ class getVals {
                 } else {
                     std::cerr << "Error reading from pipe" << std::endl;
                 }
+                std::cout<< buffer <<std::endl;
                 close(fd[0]);
             }
         }
@@ -73,6 +74,8 @@ int main(int argc, char* argv[]) {
             originalURLs.push_back(std::string (argv[i+2]));
         }
         intoC->addURLs(originalURLs);
+        intoC->flag = "-c";
+        intoC->forkCFile();
     }
     if (std::string (argv[1]) == "-f") {
         std::ifstream inputfile;
@@ -85,6 +88,7 @@ int main(int argc, char* argv[]) {
             originalURLs.push_back(line);
         }
         intoC->addURLs(originalURLs);
+        intoC->flag = "-f";
         intoC->forkCFile();
     }
     return 0;

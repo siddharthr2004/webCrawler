@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
     }
     if (strcmp(argv[1], "-c") == 0) {
         //TEST TWO
-        printf("child came here two");
+        printf("child came here twos");
         /*
         for (int i=0; i<argc-2; ++i) {
             if (i==0) {
