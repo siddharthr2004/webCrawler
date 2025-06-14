@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
             printf("%s", URLs[i]);
             vals++;
         }
-        sendLinks();
+        //sendLinks();
     }
     return 0;
 }
