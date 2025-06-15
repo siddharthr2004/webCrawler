@@ -43,6 +43,7 @@ void extractHTML(struct addrinfo *result, struct addrinfo *rp, int sfd) {
 
 void sendLinks(void) {
     for (int i=0; i<vals; ++i) {
+
         char *toDNS = malloc(256 * sizeof(char));
         
         struct addrinfo hint;
@@ -60,6 +61,8 @@ void sendLinks(void) {
         
         int size = (int) (strnlen(URLs[i], 256));
         if (URLs[i][4] == 's') {
+            printf("came here 2");
+
             for (int j=8; j<size; ++j) {
                 URLs[i][j-8] = URLs[i][j];
             }
@@ -79,7 +82,19 @@ void sendLinks(void) {
             for (int j=7; j<size; ++j) {
                 URLs[i][j-7] = URLs[i][j];
             }
-            
+            char *e;
+            if (strchr(URLs[i], '/') != NULL) {
+                e = strchr(URLs[i], '/'); 
+                if (e != NULL) {
+                    printf("came here");
+                    fflush(stdout);
+                    int offset = e - URLs[i];
+                    char *route = malloc(offset + 1);
+                    strncpy(route, URLs[i], offset);
+                    route[offset] = '\0';
+                }
+            }
+            URLs[i][size-7] = '\0';
             char *temp = strchr(URLs[i], '/');
             int sizeReal = temp - URLs[i];
             strcpy(toDNS, URLs[i]);
@@ -117,22 +132,20 @@ int main(int argc, char *argv[]) {
         }
         sendLinks();
     }
+
     if (strcmp(argv[1], "-c") == 0) {
-        //TEST TWO
-        printf("child came here twos");
-        /*
-        for (int i=0; i<argc-2; ++i) {
-            if (i==0) {
+        for (int i=2; i<argc-1; ++i) {
+            if (i==2) {
                 URLs = malloc(sizeof(char *));
             } else {
-                URLs = realloc(URLs, i+1 * sizeof(char*));
+                URLs = realloc(URLs, 256 * sizeof(char*));
             }
             URLs[vals] = malloc(256 * sizeof(char));
-            strcpy(URLs[vals], argv[i+2]);
+            strcpy(URLs[vals], argv[i]);
             vals++;
         }
+       // printf("%s", URLs[0]);
         sendLinks();
-        */
     }
     return 0;
 }

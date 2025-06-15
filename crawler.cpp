@@ -59,6 +59,8 @@ class getVals {
                 }
                 std::cout<< buffer <<std::endl;
                 close(fd[0]);
+                //TESTING ONLY
+                
             }
         }
 };
