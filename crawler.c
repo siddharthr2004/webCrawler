@@ -8,42 +8,41 @@
 
 char **URLs;
 int vals =0;
-//NEW COMMIT
 
 void extractHTML(struct addrinfo *result, struct addrinfo *rp, int sfd) {
-    for (rp = result; rp != NULL; rp = rp->ai_next) {
+    rp = result;
+    while(rp != NULL && rp->ai_addr != NULL) {
         sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
-        //check this logic, should continue until succesful connection, 
-        //not quit at first failure, maybe add while loop or quit out of 
-        //for loop with valid logic once connection is made
         if (sfd == -1) {
-            printf("error creating socket connection\n");
-        }   
-        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) != -1) {
-            if (rp == NULL) {
-                fprintf(stderr, "could not connect\n");
-                exit(EXIT_FAILURE);
-            }
-            //IMPLEMENT THE WRITE METHOD BEFORE MOVING TO RECIEVED
-            char request[4000];
-
-
-            char *buffer = malloc(3000 * sizeof(char));
-            ssize_t recieved = recv(sfd, buffer, 3000, 0);
-            if (recieved == -1) {
-                printf("could not recieve data");
-                exit(EXIT_FAILURE);
-            }
-        } else {
-            printf("error connecting to server");
+            perror("error creating socket");
+            rp = rp->ai_next;
+            continue;
         }
-        close(sfd);
+        int status = connect(sfd, rp->ai_addr, rp->ai_addrlen);
+        printf("status: %d\n", status);
+        if (status == 0) {
+            break;
+        }
+        rp = rp->ai_next; 
     }
+    char *buffer = malloc(3000 * sizeof(char));
+    printf("made it here\n");
+    printf("sfd: %d\n", sfd);
+    fflush(stdout);
+    ssize_t recieved = recv(sfd, buffer, 3000, 0);
+    //CHECK HERE
+    printf("%d\n", (int)recieved);
+    fflush(stdout);
+    if (recieved == -1) {
+        printf("could not recieve data");
+        exit(EXIT_FAILURE);
+    }
+    close(sfd);
+    
 }
 
 void sendLinks(void) {
     for (int i=0; i<vals; ++i) {
-
         char *toDNS = malloc(256 * sizeof(char));
         
         struct addrinfo hint;
@@ -60,8 +59,8 @@ void sendLinks(void) {
         hint.ai_protocol = 0;
         
         int size = (int) (strnlen(URLs[i], 256));
+        //for https links
         if (URLs[i][4] == 's') {
-            printf("came here 2");
 
             for (int j=8; j<size; ++j) {
                 URLs[i][j-8] = URLs[i][j];
@@ -78,20 +77,20 @@ void sendLinks(void) {
                 exit(EXIT_FAILURE);
             } 
             extractHTML(result, rp, sfd);
+        //solely for http links
         } else {
             for (int j=7; j<size; ++j) {
                 URLs[i][j-7] = URLs[i][j];
             }
-            char *e;
-            if (strchr(URLs[i], '/') != NULL) {
-                e = strchr(URLs[i], '/'); 
-                if (e != NULL) {
-                    printf("came here");
-                    fflush(stdout);
-                    int offset = e - URLs[i];
-                    char *route = malloc(offset + 1);
-                    strncpy(route, URLs[i], offset);
-                    route[offset] = '\0';
+            URLs[i][size - 7] = '\0';
+            char *e = strchr(URLs[i], '/');
+            char *route = NULL;
+
+            if (e != NULL && *(e + 1) != '\0') {
+                route = strdup(e + 1);  // duplicate everything after the first '/'
+                if (route == NULL) {
+                    perror("strdup");
+                    exit(EXIT_FAILURE);
                 }
             }
             URLs[i][size-7] = '\0';
@@ -105,6 +104,10 @@ void sendLinks(void) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
                 exit(EXIT_FAILURE);
             } 
+            if (result == NULL || result->ai_addr == NULL) {
+                fprintf(stderr, "Invalid address result\n");
+                exit(EXIT_FAILURE);
+            }
             extractHTML(result, rp, sfd);
         }
     }
@@ -117,7 +120,6 @@ int main(int argc, char *argv[]) {
     }
     if (strcmp(argv[1], "-f") == 0) {
         //TEST ONE
-        printf("child came here 1");
         FILE *fp = fopen(argv[2], "r");
         char *tempCpy = malloc(256 * sizeof(char));
         while(fgets(tempCpy, 256, fp) != NULL) {
@@ -144,7 +146,6 @@ int main(int argc, char *argv[]) {
             strcpy(URLs[vals], argv[i]);
             vals++;
         }
-       // printf("%s", URLs[0]);
         sendLinks();
     }
     return 0;
