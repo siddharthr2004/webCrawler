@@ -5,11 +5,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <sys/time.h>
+#include <errno.h>
 
 char **URLs;
 int vals =0;
 
-void extractHTML(struct addrinfo *result, struct addrinfo *rp, int sfd) {
+void extractHTML(struct addrinfo *result, struct addrinfo *rp, int sfd, char *toDNS, char *route) {
     rp = result;
     while(rp != NULL && rp->ai_addr != NULL) {
         sfd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
@@ -18,26 +20,56 @@ void extractHTML(struct addrinfo *result, struct addrinfo *rp, int sfd) {
             rp = rp->ai_next;
             continue;
         }
-        int status = connect(sfd, rp->ai_addr, rp->ai_addrlen);
-        printf("status: %d\n", status);
-        if (status == 0) {
+        if (connect(sfd, rp->ai_addr, rp->ai_addrlen) == 0) {
+            char* sendInfo = malloc(1000 * sizeof(char));
+            snprintf(sendInfo, 1000, 
+            "GET /%s HTTP/1.1\r\n"
+            "Host: %s\r\n"
+            "User-Agent: My-C-Client\r\n"
+            "Connection: close\r\n"
+            "\r\n",
+            route, toDNS);
+            char *buffer = malloc(3000 * sizeof(char));
+            ssize_t sent = send(sfd, sendInfo, strlen(sendInfo), 0);
+            if (sent == -1) {
+                printf("could not send data");
+                exit(EXIT_FAILURE);
+            }
+            ssize_t totalRecieved = 0;
+            ssize_t recieved;
+            struct timeval timeout = {100, 0};
+            setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout, sizeof(timeout));
+    
+            while((recieved = recv(sfd, buffer + totalRecieved, 3000 - totalRecieved, 0)) > 0) {
+                totalRecieved += recieved;
+                if (totalRecieved >= 3000) {
+                    printf("buffer overflow, increase buffer size, truancating data\n");
+                    break;
+                }
+                printf("recieved %zd bytes\n", totalRecieved);
+                }
+    
+            if (recieved == -1) {
+                printf("could not recieve data");
+                if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                     printf("Timeout occurred, no data received within the specified time.\n");
+                 } 
+                exit(EXIT_FAILURE);
+            }    
+            if (recieved == 0) {
+                printf("server closed connection\n");
+            }
+            buffer[totalRecieved] = '\0'; // Null-terminate the recieved data
+            printf("Recieved data:\n%s\n", buffer);
+            fflush(stdout);
+            }
+        else{ 
+            printf("Unexpected status");
             break;
-        }
+        } 
+        close(sfd);
         rp = rp->ai_next; 
     }
-    char *buffer = malloc(3000 * sizeof(char));
-    printf("made it here\n");
-    printf("sfd: %d\n", sfd);
-    fflush(stdout);
-    ssize_t recieved = recv(sfd, buffer, 3000, 0);
-    //CHECK HERE
-    printf("%d\n", (int)recieved);
-    fflush(stdout);
-    if (recieved == -1) {
-        printf("could not recieve data");
-        exit(EXIT_FAILURE);
-    }
-    close(sfd);
     
 }
 
@@ -76,7 +108,8 @@ void sendLinks(void) {
                 fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(s));
                 exit(EXIT_FAILURE);
             } 
-            extractHTML(result, rp, sfd);
+            //needs fixing going into the future
+            extractHTML(result, rp, sfd, toDNS, NULL);
         //solely for http links
         } else {
             for (int j=7; j<size; ++j) {
@@ -108,7 +141,7 @@ void sendLinks(void) {
                 fprintf(stderr, "Invalid address result\n");
                 exit(EXIT_FAILURE);
             }
-            extractHTML(result, rp, sfd);
+            extractHTML(result, rp, sfd, toDNS, route);
         }
     }
 }
