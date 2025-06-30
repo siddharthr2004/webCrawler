@@ -2,7 +2,8 @@ CXX := g++
 CC := gcc
 
 CXXFLAGS := -std=c++20 -Wall -O2
-CFLAGS := -std=c17 -Wall -O2
+CFLAGS := -std=c17 -Wall -O2 
+LDFLAGS := -lssl -lcrypto 
 
 CXX_TARGET := parentCrawler 
 C_TARGET := childCrawler
@@ -16,7 +17,7 @@ $(CXX_TARGET): $(CXX_SRC)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 $(C_TARGET): $(C_SRC)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean: 
 	rm -f $(C_TARGET) $(CXX_TARGET)
